@@ -12,7 +12,7 @@ const { Server } = require("socket.io")
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {cors: {
-  origin: "http://localhost:3000",
+  origin: ["http://localhost:3000","*"],
   credentials: true
 }}
 )
@@ -20,10 +20,7 @@ const io = new Server(server, {cors: {
 
 app.use(
   cors({
-    origin: 
-     [ "http://localhost:3000/",
-      "Main link"]
-    ,
+    origin: "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })

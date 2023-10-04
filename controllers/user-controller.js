@@ -65,6 +65,7 @@ const login = async (req, res) => {
       }
       res.status(200).json({
         message: "login successfully",
+        name: user.name,
         _id: user._id,
         email: user.email,
         password: user.password,
@@ -82,9 +83,11 @@ const getCurrentUser = async (req, res) => {
     res.status(404).json({ message: "failed to find user"})
   }
 
+  console.log(user.token + " token")
   res.status(200).json({
     message: "login successfully",
     _id: user._id,
+    name: user.name,
     email: user.email,
     password: user.password,
   })

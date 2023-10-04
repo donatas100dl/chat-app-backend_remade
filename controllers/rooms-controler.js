@@ -2,8 +2,9 @@ const Users = require("../models/users");
 const Rooms = require("../models/rooms");
 
 const createRoom = async (req, res) => {
+  var test = "";
   try {
-    const { user_id_1, user_id_2, messages } = req.body;
+    const { user_id_1, user_id_2 } = req.body;
 
     if (!user_id_1 || !user_id_2) {
       return res
@@ -14,20 +15,20 @@ const createRoom = async (req, res) => {
     const user = await Users.findById(req.user.id);
 
     const existingRoom = await Rooms.findOne({
-      user_id_1: user_id_1,
-      user_id_2: user_id_2,
+      $or: [
+        { user_id_1: user_id_1, user_id_2: user_id_2 },
+        { user_id_1: user_id_2, user_id_2: user_id_1 },
+      ],
     });
+
     if (existingRoom) {
       return res.status(500).json({ message: "Room already exists" });
     }
+
     if (user._id.equals(user_id_1) || user._id.equals(user_id_2)) {
       const room = await Rooms.create({
         user_id_1: user_id_1,
         user_id_2: user_id_2,
-        messages: messages.map((message) => ({
-          user_id: user.id,
-          body: message.body,
-        })),
       });
 
       if (!room) {
@@ -40,12 +41,11 @@ const createRoom = async (req, res) => {
       return res.status(403).json({ message: "User not authorized" });
     }
   } catch (err) {
-    res.status(400).send({ messages: err });
+    res.status(400).send({ message: err });
   }
 };
 
 const getRoom = async (req, res) => {
-  console.log(req.params.id);
   const room = await Rooms.findById(req.params.id);
   const user = await Users.findById(req.user.id);
 
@@ -65,7 +65,7 @@ const updateMessages = async (req, res) => {
   const room = await Rooms.findById(req.params.id);
   const user = await Users.findById(req.user.id);
   const { message } = req.body;
-  
+
   if (!room) return res.status(403).json({ message: "no room found" });
 
   const authorized =
@@ -74,7 +74,6 @@ const updateMessages = async (req, res) => {
   if (!authorized) {
     res.status(403).json({ message: "user not authorized" });
   }
-
 
   const updatedMessages = {
     $push: {
@@ -90,14 +89,35 @@ const updateMessages = async (req, res) => {
   });
 
   if (!info) {
-    res.status(403).json({ message: "failed to update" });
+    res.status(500).json({ message: "failed to update" });
   }
 
   res.status(200).json(info);
+};
+
+const getYourRoom = async (req, res) => {
+  try {
+    const rooms = await Rooms.find({
+      $or: [
+        { user_id_1: req.user._id },
+        { user_id_2: req.user._id },
+      ],
+    });
+
+    if (!rooms || rooms.length === 0) {
+      return res.status(202).json({ message: "No rooms found for the user." });
+    }
+
+    res.status(200).json(rooms);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 module.exports = {
   createRoom,
   getRoom,
   updateMessages,
+  getYourRoom,
 };
