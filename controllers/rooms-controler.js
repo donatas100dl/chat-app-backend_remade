@@ -98,10 +98,7 @@ const updateMessages = async (req, res) => {
 const getYourRoom = async (req, res) => {
   try {
     const rooms = await Rooms.find({
-      $or: [
-        { user_id_1: req.user._id },
-        { user_id_2: req.user._id },
-      ],
+      $or: [{ user_id_1: req.user._id }, { user_id_2: req.user._id }],
     });
 
     if (!rooms || rooms.length === 0) {
@@ -115,9 +112,42 @@ const getYourRoom = async (req, res) => {
   }
 };
 
+const loadRoom = async (req, res) => {
+  try {
+    const { user_id_1, user_id_2 } = await req.body;
+
+    if (!user_id_1 || !user_id_2) {
+      res.status(404).json({ message: "missing user_id_1 or user_id_1" });
+    }
+
+    const user = await Users.find(req.user._id);
+    if (!user) {
+      res.status(404).json({ message: "user not found" });
+    }
+
+    const room = await Rooms.find({
+      $or: [
+        { user_id_1: req.user._id, user_id_2: user_id_2 },
+        { user_id_1: user_id_1, user_id_2: req.user._id },
+      ],
+    });
+
+    if (!room) {
+      res.status(404).json({ message: "room not found" });
+    }
+
+    res.status(200).json({
+      room,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err });
+  }
+};
+
 module.exports = {
   createRoom,
   getRoom,
   updateMessages,
   getYourRoom,
+  loadRoom,
 };

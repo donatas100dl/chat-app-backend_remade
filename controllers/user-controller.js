@@ -83,7 +83,7 @@ const getCurrentUser = async (req, res) => {
     res.status(404).json({ message: "failed to find user"})
   }
 
-  console.log(user.token + " token")
+  
   res.status(200).json({
     message: "login successfully",
     _id: user._id,
@@ -94,12 +94,29 @@ const getCurrentUser = async (req, res) => {
 
 };
 
+const getAllUsers = async(req, res) => {
+  try{ 
+   const users = await Users.find()
+
+   res.status(200).json({
+     users
+   })
+  } 
+  catch(err){
+    res.status(500).json({
+      message:err
+    })
+  }
+}
+
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
+
 
 module.exports = {
   registerUser,
   login,
   getCurrentUser,
+  getAllUsers,
 };
