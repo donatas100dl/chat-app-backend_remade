@@ -39,7 +39,7 @@ io.on('connection', (socket) => {
     callback("user joined room: " + data.id)
   })
   socket.on("newMessage", (data, callback) => {
-    callback(data)
+    // callback(data)
     socket.to(data.room_id).emit("gottenMessage", data);
   })
 
