@@ -26,13 +26,28 @@ app.use(
   })
 );
 
-
+var usersConnected = 0
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  usersConnected++
+  console.log("users connected: " + usersConnected)
   socket.on("sendMessage", (data, callback) => {
     callback("we got your msg")
     socket.broadcast.emit("brodcastMessage", data)
   })
+  socket.on("joinRoom", (data, callback) => {
+    socket.join(data.id);
+    callback("user joined room: " + data.id)
+  })
+  socket.on("newMessage", (data, callback) => {
+    callback(data)
+    socket.to(data.room_id).emit("gottenMessage", data);
+  })
+
+  socket.on('disconnect', () => {
+    usersConnected--
+    console.log("users connected: " + usersConnected)
+  })
+
 });
 
 server.listen(4000, () => {

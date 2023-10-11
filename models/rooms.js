@@ -21,6 +21,7 @@ const roomsSchema = new mongoose.Schema({
   user_id_1: {
     type: String,
     required: true,
+
   },
   user_id_2: {
     type: String,
