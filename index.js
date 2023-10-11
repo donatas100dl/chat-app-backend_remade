@@ -12,7 +12,7 @@ const { Server } = require("socket.io")
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {cors: {
-  origin: ["http://localhost:3000","*"],
+  origin: ["http://localhost:3000","https://chat-app-kappa-sage.vercel.app","*"],
   credentials: true
 }}
 )
@@ -20,7 +20,7 @@ const io = new Server(server, {cors: {
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000","https://chat-app-kappa-sage.vercel.app"],
     methods: ["GET", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -29,7 +29,7 @@ app.use(
 var usersConnected = 0
 io.on('connection', (socket) => {
   usersConnected++
-  console.log("users connected: " + usersConnected)
+  console.log("users connected: " + usersConnected+ " ------- " + socket.id)
   socket.on("sendMessage", (data, callback) => {
     callback("we got your msg")
     socket.broadcast.emit("brodcastMessage", data)
