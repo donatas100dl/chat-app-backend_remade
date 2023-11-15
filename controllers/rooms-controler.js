@@ -82,6 +82,23 @@ const callRoom = async (user_id_1, user_id_2, userID) => {
     ],
   });
 
+  // getting id of !user_id
+  let user_2_id = user_id_1 !== userID ? user_id_1 : user_id_2
+
+  let newMessages = room.messages.map(message => {
+    if (message.user_id.equals(user_2_id)) {
+      return { ...message.toObject(), read: true };
+    }
+    return message.toObject();
+  });
+
+  console.log("user ", userID, " has read users", user_2_id ," its messages")
+
+  await Rooms.updateOne(
+    { _id: room._id },
+    { $set: { messages: newMessages } }
+  );
+
   return room;
 };
 
@@ -167,9 +184,54 @@ const loadRoom = async (req, res) => {
   }
 };
 
+const getRoomInfo = async (req, res) => {
+  try {
+    const user = await Users.findById(req.user.id);
+    const rooms = await Rooms.find({
+      $or: [{ user_id_1: req.user._id }, { user_id_2: req.user._id }],
+    });
+    var roomsinfo = []
+    await Promise.all(rooms.map(async (room) => {
+      // finding user2
+      let userId = room.user_id_1 !== req.user.id ? room.user_id_1 : room.user_id_2;
+      let user2 = await Users.findById(userId);
+    
+      // geting last meesage
+      let lastMessage = 0;
+      room.messages.forEach((message) => {
+        if (message.user_id.equals(user2._id)) {
+          lastMessage = message.date;
+        }
+      });
+
+      // getting unread messages
+
+      let unreadMessages = 0;
+      room.messages.forEach((message) => {
+        if(message.user_id.equals(user2._id) && message.read === false) {
+          unreadMessages = unreadMessages + 1
+        }
+      })
+
+    
+      let roominfo = {
+        name: user2.name,
+        lastMessage: lastMessage,
+        unreadMessages: unreadMessages
+      };
+      roomsinfo.push(roominfo);
+    }));
+    res.status(200).json({roomsinfo: roomsinfo});
+  }
+  catch (err) {
+    return res.status(500).json({message: err});
+  }
+}
+
 module.exports = {
   getRoom,
   updateMessages,
   getYourRoom,
   loadRoom,
+  getRoomInfo,
 };
